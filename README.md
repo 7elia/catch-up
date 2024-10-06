@@ -2,6 +2,12 @@
 
 Import Spotify listening history to Last.FM
 
+## Preview
+
+<img src="./preview/login.png" />
+
+<img src="./preview/main.png" />
+
 ## Project Setup
 
 ### Install
