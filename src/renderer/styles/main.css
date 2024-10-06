@@ -1,0 +1,119 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&display=swap");
+
+:root {
+  --color-background: #040416;
+  --color-foreground: #002e79;
+  --color-text: #E1E2EF;
+  --color-text-shadow: #e1e2ef4b;
+
+  --slider-bg: var(--color-text);
+  --slider-connect-bg: var(--color-background);
+  --slider-connect-bg-disabled: var(--color-background);
+  --slider-height: 11px;
+  --slider-radius: 4px;
+  --slider-handle-bg: var(--color-background);
+  --slider-handle-shadow: 0;
+  --slider-handle-shadow-active: 0;
+  --slider-handle-ring-width: 0;
+  --slider-tooltip-bg: var(--color-background);
+  --slider-tooltip-bg-disabled: var(--color-background);
+  --slider-tooltip-color: var(--color-text);
+}
+
+html {
+  padding-right: calc(100vw - 100%);
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--color-background);
+  background-size: cover;
+  overflow: hidden;
+}
+
+body, button, a {
+  font-family: "Outfit", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--color-text);
+  text-decoration-line: none;
+}
+
+a:hover {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 4px;
+}
+
+button {
+  background-color: var(--color-foreground);
+  padding: 0.3rem 13px;
+  border: 0;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+button, a {
+  transition: transform 0.6s cubic-bezier(0.2, 1, 0.2, 1);
+  line-height: normal;
+  vertical-align: middle;
+  text-align: center;
+}
+
+button:hover, a:hover {
+  transform: scale(1.05);
+  line-height: normal;
+  vertical-align: middle;
+  text-align: center;
+}
+
+code {
+  font-family: "Azeret Mono", monospace;
+  font-size: 80%;
+  background-color: var(--color-background);
+  padding: 8px;
+  border-radius: 7px;
+  height: 100%;
+}
+
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-background);
+  border-radius: 10px;
+  box-shadow: none;
+  transform: translateY(20%);
+  border: 0;
+  padding: 0;
+  background-color: var(--color-text);
+  color: var(--color-text);
+}
+
+input[type="checkbox"]:hover,
+input[type="checkbox"]:checked,
+input[type="checkbox"]::before,
+input[type="checkbox"]::after {
+  accent-color: var(--color-background);
+  border: 0;
+  padding: 0;
+  background-color: var(--color-text);
+  color: var(--color-text);
+}
+
+#app {
+  display: flex;
+}
+
+.button-secondary {
+  background-color: var(--color-background);
+}
