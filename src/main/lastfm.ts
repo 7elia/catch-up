@@ -11,10 +11,10 @@ async function createRequest<T>(
   const urlParams = new URLSearchParams({
     ...params,
     method,
-    api_key: process.env.LASTFM_KEY as string
+    api_key: process.env.LASTFM_KEY as string,
+    format: "json"
   });
   urlParams.append("api_sig", getSignature(urlParams));
-  urlParams.append("format", "json");
   return await (await fetch(`${base}?${urlParams.toString()}`, { method: reqMethod })).json();
 }
 
@@ -47,7 +47,16 @@ function getSignature(params: URLSearchParams): string {
 }
 
 export async function createToken(): Promise<string> {
-  return (await createRequest<{ token: string }>("auth.getToken")).token;
+  const token = (await createRequest<{ token: string }>("auth.getToken")).token;
+  setTimeout(
+    () => {
+      if (store.get("token") === token) {
+        store.delete("token");
+      }
+    },
+    59 * 60 * 1000
+  );
+  return token;
 }
 
 export async function getAuthUrl(): Promise<string> {

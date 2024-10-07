@@ -15,7 +15,8 @@ const callbacks = {
     return app.getPath("userData");
   },
   logout() {
-    store.clear();
+    store.delete("key");
+    store.delete("token");
   },
   focusFile(args: { path: string }) {
     shell.openPath(args.path);

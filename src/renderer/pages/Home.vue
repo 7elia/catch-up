@@ -2,14 +2,8 @@
   <main v-if="dataLoaded" class="layout">
     <nav class="navbar">
       <div class="navbar-user">
-        <img
-          class="navbar-pfp"
-          :src="
-            user?.image.length === 0
-              ? `https://lastfm.freetls.fastly.net/i/u/avatar42s/818148bf682d429dc215c1705eb27b98.png`
-              : user?.image[3].url
-          "
-        />
+        <!-- eslint-disable-next-line prettier/prettier -->
+        <img class="navbar-pfp" :src="user?.image.length === 0 ? `https://lastfm.freetls.fastly.net/i/u/avatar42s/818148bf682d429dc215c1705eb27b98.png` : user?.image[3].url" />
         <a class="navbar-username" :href="user?.url">{{ user?.name }}</a>
       </div>
       <button class="navbar-logout button-secondary" @click="logout">Logout</button>
