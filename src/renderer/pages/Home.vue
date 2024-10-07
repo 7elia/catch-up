@@ -189,6 +189,7 @@ export default {
       }
       window.electron.ipcRenderer.send("start-scrobbling");
       this.updateProgress();
+      this.canScrobble = false;
       await this.startScrobbleCountdown();
     },
     updateProgress() {

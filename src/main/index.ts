@@ -208,6 +208,8 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on("start-scrobbling", async () => {
+    store.set("lastScrobbled", new Date());
+
     const songs = store.get("remainingSongs");
     const limit = store.get("scrobbleLimit");
 
@@ -224,7 +226,6 @@ app.whenReady().then(() => {
     }
 
     store.set("remainingSongs", songs.slice(done, songs.length));
-    store.set("lastScrobbled", new Date());
   });
 });
 
