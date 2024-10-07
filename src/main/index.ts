@@ -69,7 +69,6 @@ function createWindow(): BrowserWindow {
   });
 
   mainWindow.webContents.on("will-navigate", (e, url) => {
-    console.log(url);
     e.preventDefault();
     shell.openExternal(url);
   });

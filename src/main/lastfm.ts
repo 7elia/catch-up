@@ -11,11 +11,15 @@ async function createRequest<T>(
   const urlParams = new URLSearchParams({
     ...params,
     method,
-    api_key: process.env.LASTFM_KEY as string,
-    format: "json"
+    api_key: process.env.LASTFM_KEY as string
   });
   urlParams.append("api_sig", getSignature(urlParams));
-  return await (await fetch(`${base}?${urlParams.toString()}`, { method: reqMethod })).json();
+  urlParams.append("format", "json");
+  const result = await (
+    await fetch(`${base}?${urlParams.toString()}`, { method: reqMethod })
+  ).json();
+  console.log(`${method}: ${JSON.stringify(result)}`);
+  return result;
 }
 
 async function createSessionRequest<T>(
@@ -77,32 +81,29 @@ export async function getSession(): Promise<SessionResponse> {
   ).session;
 }
 
-let cache: UserResponse;
 export async function getAuthenticatedUser(): Promise<UserResponse> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = (await createSessionRequest<{ user: any }>("user.getInfo")).user;
-  return !cache
-    ? (cache = {
-        ...data,
-        age: Number(data.age),
-        album_count: Number(data.album_count),
-        artist_count: Number(data.artist_count),
-        bootstrap: Number(data.bootstrap),
-        image: data.image
-          .filter((v: { "#text": string; size: string }) => v["#text"] !== "")
-          .map((v: { "#text": string; size: string }) => {
-            return {
-              url: v["#text"],
-              size: v.size
-            };
-          }),
-        playcount: Number(data.playcount),
-        playlists: Number(data.playlists),
-        registered: new Date(data.registered["#text"] * 1000),
-        subscriber: Number(data.subscriber),
-        track_count: Number(data.track_count)
-      })
-    : cache;
+  return {
+    ...data,
+    age: Number(data.age),
+    album_count: Number(data.album_count),
+    artist_count: Number(data.artist_count),
+    bootstrap: Number(data.bootstrap),
+    image: data.image
+      .filter((v: { "#text": string; size: string }) => v["#text"] !== "")
+      .map((v: { "#text": string; size: string }) => {
+        return {
+          url: v["#text"],
+          size: v.size
+        };
+      }),
+    playcount: Number(data.playcount),
+    playlists: Number(data.playlists),
+    registered: new Date(data.registered["#text"] * 1000),
+    subscriber: Number(data.subscriber),
+    track_count: Number(data.track_count)
+  };
 }
 
 export async function scrobble(streams: Stream[]) {

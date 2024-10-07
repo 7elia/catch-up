@@ -8,8 +8,12 @@ const callbacks = {
   isAuthenticated() {
     return store.has("key");
   },
-  async getAuthenticatedUser(): Promise<UserResponse> {
-    return await getAuthenticatedUser();
+  async getAuthenticatedUser(): Promise<UserResponse | null> {
+    try {
+      return await getAuthenticatedUser();
+    } catch {
+      return null;
+    }
   },
   getConfigPath() {
     return app.getPath("userData");

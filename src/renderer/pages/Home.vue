@@ -127,6 +127,10 @@ export default {
       user: undefined as UserResponse | undefined
     };
   },
+  unmounted() {
+    window.electron.ipcRenderer.removeAllListeners("update-scanned-songs");
+    window.electron.ipcRenderer.removeAllListeners("update-scrobbled-songs");
+  },
   async mounted() {
     window.electron.ipcRenderer.on("update-scanned-songs", (_, args: { scannedSongs: number }) => {
       this.scannedSongs = args.scannedSongs;
@@ -139,7 +143,12 @@ export default {
       }
     );
 
-    this.user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      this.$router.push("/login");
+      return;
+    }
+    this.user = user;
     await this.initStartupData();
     await this.startScrobbleCountdown();
 

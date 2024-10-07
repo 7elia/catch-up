@@ -21,7 +21,7 @@ export async function isAuthenticated(): Promise<boolean> {
   return await callMethod("isAuthenticated");
 }
 
-export async function getAuthenticatedUser(): Promise<UserResponse> {
+export async function getAuthenticatedUser(): Promise<UserResponse | null> {
   return await callMethod("getAuthenticatedUser");
 }
 
