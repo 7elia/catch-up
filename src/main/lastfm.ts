@@ -15,11 +15,7 @@ async function createRequest<T>(
   });
   urlParams.append("api_sig", getSignature(urlParams));
   urlParams.append("format", "json");
-  const result = await (
-    await fetch(`${base}?${urlParams.toString()}`, { method: reqMethod })
-  ).json();
-  console.log(`${method}: ${JSON.stringify(result)}`);
-  return result;
+  return await (await fetch(`${base}?${urlParams.toString()}`, { method: reqMethod })).json();
 }
 
 async function createSessionRequest<T>(

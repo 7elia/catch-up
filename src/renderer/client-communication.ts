@@ -37,6 +37,10 @@ export async function getStartupData(): Promise<StartupData> {
   return await callMethod("getStartupData");
 }
 
+export async function getSelectedFile(): Promise<string> {
+  return await callMethod("getSelectedFile");
+}
+
 export async function setScrobbleLimit(limit: number) {
   await callMethod("setScrobbleLimit", { limit });
 }
@@ -48,4 +52,8 @@ export async function setRunOnStartup(value: boolean) {
 export async function getLastScrobbled(): Promise<Date | null> {
   const result = await callMethod("getLastScrobbled");
   return !result ? null : new Date(result as string);
+}
+
+export async function startTask(task: string): Promise<void> {
+  window.electron.ipcRenderer.send(`start-${task}`);
 }

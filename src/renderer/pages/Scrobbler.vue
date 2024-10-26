@@ -1,27 +1,9 @@
 <template>
   <main v-if="dataLoaded" class="layout">
-    <nav class="navbar">
-      <div class="navbar-user">
-        <!-- eslint-disable-next-line prettier/prettier -->
-        <img class="navbar-pfp" :src="user?.image.length === 0 ? `https://lastfm.freetls.fastly.net/i/u/avatar42s/818148bf682d429dc215c1705eb27b98.png` : user?.image[3].url" />
-        <a class="navbar-username" :href="user?.url">{{ user?.name }}</a>
-      </div>
-      <button class="navbar-logout button-secondary" @click="logout">Logout</button>
-    </nav>
+    <Navbar />
     <div class="container-layout">
+      <ZipSelector />
       <div class="box-container">
-        <button class="full-size-button button-secondary" @click="selectFile">
-          Select .zip File
-        </button>
-      </div>
-      <div class="box-container">
-        <p>
-          <b>Selected File: </b>
-          <a v-if="selectedFile" style="cursor: pointer" @click="openSelectedFile">
-            <code>{{ selectedFile }}</code>
-          </a>
-          <code v-else>None</code>
-        </p>
         <p>
           <b>Songs Left: </b>
           <code>
@@ -97,25 +79,27 @@
   </main>
 </template>
 <script lang="ts">
-import { SelectZipResult, UserResponse } from "src/common/types";
 import {
-  focusFile,
-  getAuthenticatedUser,
   getStartupData,
-  logout,
   setScrobbleLimit,
   setRunOnStartup,
-  getLastScrobbled
+  getLastScrobbled,
+  startTask
 } from "../client-communication";
 import Slider from "@vueform/slider";
+import Navbar from "../components/Navbar.vue";
+import ZipSelector from "../components/ZipSelector.vue";
+import store from "../store";
 
 export default {
   components: {
-    Slider
+    Slider,
+    Navbar,
+    ZipSelector
   },
   data() {
     return {
-      selectedFile: undefined as string | undefined,
+      selectedFile: store.selectedFile,
       scannedSongs: 0,
       initialScannedSongs: 0,
       scrobbledSongs: 0,
@@ -123,8 +107,7 @@ export default {
       progress: 0,
       runOnStartup: false,
       canScrobble: false,
-      dataLoaded: false,
-      user: undefined as UserResponse | undefined
+      dataLoaded: false
     };
   },
   unmounted() {
@@ -134,6 +117,10 @@ export default {
   async mounted() {
     window.electron.ipcRenderer.on("update-scanned-songs", (_, args: { scannedSongs: number }) => {
       this.scannedSongs = args.scannedSongs;
+      if (this.scannedSongs > this.initialScannedSongs) {
+        // this is just a client side thing
+        this.initialScannedSongs = this.scannedSongs;
+      }
     });
     window.electron.ipcRenderer.on(
       "update-scrobbled-songs",
@@ -143,12 +130,6 @@ export default {
       }
     );
 
-    const user = await getAuthenticatedUser();
-    if (!user) {
-      this.$router.push("/login");
-      return;
-    }
-    this.user = user;
     await this.initStartupData();
     await this.startScrobbleCountdown();
 
@@ -158,36 +139,17 @@ export default {
   methods: {
     async initStartupData() {
       const startupData = await getStartupData();
-      this.selectedFile = startupData.selectedFile;
       this.scannedSongs = startupData.scannedSongs;
       this.initialScannedSongs = startupData.initialScannedSongs;
       this.scrobbledSongs = startupData.scrobbledSongs;
       this.scrobbleLimit = startupData.scrobbleLimit;
       this.runOnStartup = startupData.runOnStartup;
     },
-    logout() {
-      logout();
-      this.$router.push("/login");
-    },
-    selectFile() {
-      window.electron.ipcRenderer.once("select-zip-done", (_, data: SelectZipResult) => {
-        if (!data.canceled) {
-          this.initStartupData();
-        }
-      });
-      this.initialScannedSongs = 0;
-      window.electron.ipcRenderer.send("select-zip-start");
-    },
-    async openSelectedFile() {
-      if (this.selectedFile) {
-        await focusFile(this.selectedFile);
-      }
-    },
     async startScrobbling() {
       if (!this.canScrobble) {
         return;
       }
-      window.electron.ipcRenderer.send("start-scrobbling");
+      startTask("scrobbler");
       this.updateProgress();
       this.canScrobble = false;
       await this.startScrobbleCountdown();
@@ -237,72 +199,6 @@ export default {
 };
 </script>
 <style scoped>
-.navbar {
-  width: 100vw;
-  height: 2.6rem;
-  background-color: var(--color-foreground);
-  display: flex;
-  flex-direction: row;
-  vertical-align: middle;
-  justify-content: space-between;
-}
-
-.navbar-user {
-  display: flex;
-  align-items: center;
-  vertical-align: middle;
-  height: 100%;
-  margin-left: 1.5rem;
-  gap: 0.7rem;
-}
-
-.navbar-pfp {
-  height: 80%;
-  border-radius: 100%;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.navbar-logout {
-  height: 80%;
-  margin-right: 1.5rem;
-  margin-top: 0.5ch;
-  vertical-align: middle;
-}
-
-.layout,
-.container-layout {
-  display: flex;
-  flex-direction: column;
-}
-
-.layout {
-  width: 100%;
-  justify-content: center;
-  align-items: center;
-}
-
-.container-layout {
-  width: 60%;
-  margin: 2rem auto 0 auto;
-  gap: 2rem;
-}
-
-.box-container {
-  background-color: var(--color-foreground);
-  padding: 1.5rem;
-  border-radius: 10px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.full-size-button {
-  height: calc(2.6rem * 0.8);
-  width: 100%;
-}
-
 .run-on-startup {
   margin-left: 6px;
 }

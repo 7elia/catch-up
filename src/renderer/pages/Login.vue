@@ -13,17 +13,17 @@
   </main>
 </template>
 <script lang="ts">
-import { isAuthenticated } from "../client-communication";
+import { isAuthenticated, startTask } from "../client-communication";
 
 export default {
   methods: {
     login() {
       window.electron.ipcRenderer.once("auth-done", async () => {
         if (await isAuthenticated()) {
-          await this.$router.push("/");
+          await this.$router.push("/scrobbler");
         }
       });
-      window.electron.ipcRenderer.send("auth-start");
+      startTask("auth");
     }
   }
 };

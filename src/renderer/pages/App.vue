@@ -6,9 +6,7 @@ import { isAuthenticated } from "../client-communication";
 
 export default {
   async mounted() {
-    if (!(await isAuthenticated())) {
-      this.$router.push("/login");
-    }
+    this.$router.push((await isAuthenticated()) ? "/scrobbler" : "/login");
   }
 };
 </script>

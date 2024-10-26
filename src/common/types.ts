@@ -64,10 +64,22 @@ export type Stream = {
 };
 
 export type StartupData = {
-  selectedFile: string;
   scannedSongs: number;
   initialScannedSongs: number;
   scrobbleLimit: number;
   scrobbledSongs: number;
   runOnStartup: boolean;
+};
+
+export type AnalysisSection = {
+  name: string;
+  secondsPlayed: number;
+  playCount: number;
+};
+
+export type AnalysisData = {
+  platforms: AnalysisSection[];
+  artists: AnalysisSection[];
+  songs: AnalysisSection[];
+  albums: AnalysisSection[];
 };

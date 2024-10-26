@@ -5,18 +5,29 @@ import { createApp } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import App from "./pages/App.vue";
-import Home from "./pages/Home.vue";
 import Login from "./pages/Login.vue";
+import Scrobbler from "./pages/Scrobbler.vue";
+import Analyzer from "./pages/Analyzer.vue";
 
 const router = createRouter({
   routes: [
     {
-      path: "/",
-      component: Home
+      path: "/scrobbler",
+      component: Scrobbler,
+      name: "Scrobbler"
+    },
+    {
+      path: "/analyzer",
+      component: Analyzer,
+      name: "Analyzer"
     },
     {
       path: "/login",
-      component: Login
+      component: Login,
+      name: "Login",
+      meta: {
+        hidden: true
+      }
     }
   ],
   history: createMemoryHistory()
