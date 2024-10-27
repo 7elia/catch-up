@@ -74,7 +74,7 @@ export default {
   align-items: center;
   justify-content: center;
   margin-left: 1.5rem;
-  gap: 0.7rem;
+  gap: 0.6rem;
 }
 
 .navbar-pfp {

@@ -24,6 +24,7 @@
 html {
   padding-right: calc(100vw - 100%);
   box-sizing: border-box;
+  scrollbar-width: none;
 }
 
 *, *::before, *::after {
@@ -35,7 +36,7 @@ body {
   min-height: 100vh;
   background: var(--color-background);
   background-size: cover;
-  /* overflow: hidden; */
+  overflow-x: hidden;
 }
 
 body, button, a {
