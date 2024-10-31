@@ -57,3 +57,7 @@ export async function getLastScrobbled(): Promise<Date | null> {
 export async function startTask(task: string): Promise<void> {
   window.electron.ipcRenderer.send(`start-${task}`);
 }
+
+export async function openExternalUrl(url: string): Promise<void> {
+  await callMethod("openExternalUrl", { url });
+}

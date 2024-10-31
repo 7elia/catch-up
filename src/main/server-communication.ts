@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { store } from ".";
 import { createToken, getAuthenticatedUser, getAuthUrl, getSession, scrobble } from "./lastfm";
 import { AnalysisData, AnalysisSection, StartupData, Stream, UserResponse } from "../common/types";
-import { electronApp, platform } from "@electron-toolkit/utils";
+import { electronApp, is, platform } from "@electron-toolkit/utils";
 import { readZipContents } from "./utils";
 
 const callbacks = {
@@ -44,8 +44,11 @@ const callbacks = {
   setRunOnStartup(args: { value: boolean }) {
     electronApp.setAutoLaunch(args.value);
   },
-  getLastScrobbled(): Date {
-    return store.get("lastScrobbled");
+  getLastScrobbled(): Date | null {
+    return !is.dev ? store.get("lastScrobbled") : null;
+  },
+  openExternalUrl(args: { url: string }) {
+    shell.openExternal(args.url);
   }
 };
 
@@ -111,7 +114,13 @@ const tasks = {
     const scannedSongs: Stream[] = [];
 
     if (!result.canceled) {
-      store.set("selectedFile", result.filePaths[0]);
+      store.set({
+        selectedFile: result.filePaths[0],
+        initialScannedSongs: 0,
+        scrobbledSongs: 0,
+        remainingSongs: []
+      });
+      mainWindow.webContents.send("select-zip-start");
 
       for await (const history of readZipContents(result.filePaths[0])) {
         for (const stream of history) {
@@ -125,8 +134,10 @@ const tasks = {
             name: stream.master_metadata_track_name!
           });
         }
-        store.set("remainingSongs", scannedSongs);
-        store.set("initialScannedSongs", scannedSongs.length);
+        store.set({
+          remainingSongs: scannedSongs,
+          initialScannedSongs: scannedSongs.length
+        });
         mainWindow.webContents.send("update-scanned-songs", {
           scannedSongs: scannedSongs.length
         });
@@ -140,7 +151,9 @@ const tasks = {
     });
   },
   async scrobbler(mainWindow: BrowserWindow) {
-    store.set("lastScrobbled", new Date());
+    if (!is.dev) {
+      store.set("lastScrobbled", new Date());
+    }
 
     const songs = store.get("remainingSongs");
     const limit = store.get("scrobbleLimit");

@@ -23,7 +23,9 @@
         </p>
         <div class="progress-bar-container">
           <div class="progress-bar" :style="{ width: `${Math.max(5, progress || 0)}%` }">
-            <p class="progress-text">{{ progress }}%</p>
+            <p class="progress-text" :style="{ color: done ? 'greenyellow' : undefined }">
+              {{ progress }}%
+            </p>
           </div>
         </div>
       </div>
@@ -69,7 +71,7 @@
       <div class="box-container">
         <button
           class="full-size-button button-secondary"
-          :disabled="!canScrobble"
+          :disabled="!canScrobble || done"
           @click="startScrobbling"
         >
           <p id="start-scrobble-text">Loading...</p>
@@ -107,7 +109,8 @@ export default {
       progress: 0,
       runOnStartup: false,
       canScrobble: false,
-      dataLoaded: false
+      dataLoaded: false,
+      done: false
     };
   },
   unmounted() {
@@ -116,29 +119,38 @@ export default {
   },
   async mounted() {
     window.electron.ipcRenderer.on("update-scanned-songs", (_, args: { scannedSongs: number }) => {
-      this.scannedSongs = args.scannedSongs;
-      if (this.scannedSongs > this.initialScannedSongs) {
-        // this is just a client side thing
-        this.initialScannedSongs = this.scannedSongs;
-      }
+      this.scannedSongs = this.initialScannedSongs = args.scannedSongs;
+      this.updateProgress();
     });
     window.electron.ipcRenderer.on(
       "update-scrobbled-songs",
       (_, args: { scrobbledSongs: number }) => {
+        console.log("hi 3");
         this.scrobbledSongs = args.scrobbledSongs;
-        this.updateProgress();
       }
     );
+    window.electron.ipcRenderer.on("zip-select-start", () => {
+      this.scannedSongs = this.initialScannedSongs = this.scrobbledSongs = this.progress = 0;
+      this.dataLoaded = this.done = false;
+      this.updateProgress();
+    });
+    window.electron.ipcRenderer.on("zip-select-done", async () => {
+      await this.init();
+    });
 
-    await this.initStartupData();
-    await this.startScrobbleCountdown();
-
-    this.updateProgress();
-    this.dataLoaded = true;
+    await this.init();
   },
   methods: {
+    async init() {
+      await this.initStartupData();
+      this.updateProgress();
+      this.dataLoaded = true;
+      this.done = this.scannedSongs === 0 && !!this.selectedFile;
+      await this.startScrobbleCountdown();
+    },
     async initStartupData() {
       const startupData = await getStartupData();
+      console.log(startupData);
       this.scannedSongs = startupData.scannedSongs;
       this.initialScannedSongs = startupData.initialScannedSongs;
       this.scrobbledSongs = startupData.scrobbledSongs;
@@ -146,10 +158,12 @@ export default {
       this.runOnStartup = startupData.runOnStartup;
     },
     async startScrobbling() {
-      if (!this.canScrobble) {
+      if (!this.canScrobble || this.done) {
         return;
       }
+      console.log("hi");
       startTask("scrobbler");
+      console.log("hi 2");
       this.updateProgress();
       this.canScrobble = false;
       await this.startScrobbleCountdown();
@@ -175,7 +189,7 @@ export default {
         const remainingTime = targetTime.getTime() - now.getTime();
 
         if (remainingTime <= 0) {
-          element.innerText = "Scrobble Today's Limit";
+          element.innerText = this.done ? "Done!" : "Scrobble Today's Limit";
           this.canScrobble = true;
           clearInterval(interval);
           return;

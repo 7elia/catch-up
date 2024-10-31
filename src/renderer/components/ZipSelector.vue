@@ -1,6 +1,12 @@
 <template>
   <div class="box-container">
-    <button class="full-size-button button-secondary" @click="selectFile">Select .zip File</button>
+    <button
+      class="full-size-button button-secondary"
+      :disabled="loading"
+      @click="startTask('selectZip')"
+    >
+      Select .zip File
+    </button>
     <p>
       <b>Selected File: </b>
       <a v-if="selectedFile" style="cursor: pointer" @click="openSelectedFile">
@@ -18,28 +24,32 @@ import store from "../store";
 export default {
   data() {
     return {
-      selectedFile: store.selectedFile
+      selectedFile: store.selectedFile,
+      loading: false
     };
   },
   async mounted() {
+    window.electron.ipcRenderer.on("select-zip-start", () => {
+      this.loading = true;
+    });
+    window.electron.ipcRenderer.on("select-zip-done", (_, data: SelectZipResult) => {
+      if (!data.canceled) {
+        this.selectedFile = store.selectedFile = data.filePath;
+      }
+      this.loading = false;
+    });
+
     if (!store.selectedFile) {
-      store.selectedFile = await getSelectedFile();
+      this.selectedFile = store.selectedFile = await getSelectedFile();
     }
   },
   methods: {
-    selectFile() {
-      window.electron.ipcRenderer.once("select-zip-done", (_, data: SelectZipResult) => {
-        if (!data.canceled) {
-          store.selectedFile = data.filePath;
-        }
-      });
-      startTask("selectZip");
-    },
     async openSelectedFile() {
       if (this.selectedFile) {
         await focusFile(this.selectedFile);
       }
-    }
+    },
+    startTask
   }
 };
 </script>

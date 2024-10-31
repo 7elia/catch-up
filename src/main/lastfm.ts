@@ -1,6 +1,7 @@
 import md5 from "md5";
 import { store } from ".";
 import { UserResponse, SessionResponse, Stream } from "../common/types";
+import { is } from "@electron-toolkit/utils";
 
 async function createRequest<T>(
   method: string,
@@ -14,8 +15,15 @@ async function createRequest<T>(
     api_key: process.env.LASTFM_KEY as string
   });
   urlParams.append("api_sig", getSignature(urlParams));
+  // the format needs to be added after the signature.
   urlParams.append("format", "json");
-  return await (await fetch(`${base}?${urlParams.toString()}`, { method: reqMethod })).json();
+  const result = await (
+    await fetch(`${base}?${urlParams.toString()}`, { method: reqMethod })
+  ).json();
+  if (is.dev) {
+    console.log(`${method}: ${JSON.stringify(result)}`);
+  }
+  return result;
 }
 
 async function createSessionRequest<T>(
@@ -103,6 +111,9 @@ export async function getAuthenticatedUser(): Promise<UserResponse> {
 }
 
 export async function scrobble(streams: Stream[]) {
+  if (is.dev) {
+    return;
+  }
   const params = {};
   for (let i = 0; i < streams.length; i++) {
     const stream = streams[i];

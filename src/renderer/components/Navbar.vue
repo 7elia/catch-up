@@ -1,8 +1,17 @@
 <template>
   <nav class="navbar">
-    <button class="navbar-user button-secondary">
-      <!-- eslint-disable-next-line prettier/prettier -->
-      <img class="navbar-pfp" :src="!user || user?.image.length === 0 ? `https://lastfm.freetls.fastly.net/i/u/avatar42s/818148bf682d429dc215c1705eb27b98.png` : user?.image[3].url" />
+    <button
+      class="navbar-user button-secondary"
+      @click="() => (!user ? '' : openExternalUrl(user.url))"
+    >
+      <img
+        class="navbar-pfp"
+        :src="
+          !user || user?.image.length === 0
+            ? `https://lastfm.freetls.fastly.net/i/u/avatar42s/818148bf682d429dc215c1705eb27b98.png`
+            : user?.image[3].url
+        "
+      />
       {{ !user ? "Loading..." : user?.name }}
     </button>
     <div class="navbar-routes">
@@ -24,7 +33,7 @@
   </nav>
 </template>
 <script lang="ts">
-import { getAuthenticatedUser, logout } from "../client-communication";
+import { getAuthenticatedUser, logout, openExternalUrl } from "../client-communication";
 import store from "../store";
 
 export default {
@@ -34,18 +43,22 @@ export default {
     };
   },
   async mounted() {
+    if (this.user) {
+      return;
+    }
     const user = await getAuthenticatedUser();
     if (!user) {
       this.$router.push("/login");
       return;
     }
-    store.user = user;
+    this.user = store.user = user;
   },
   methods: {
     logout() {
       logout();
       this.$router.push("/login");
-    }
+    },
+    openExternalUrl
   }
 };
 </script>
