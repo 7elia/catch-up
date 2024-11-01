@@ -28,6 +28,10 @@ export default {
       loading: false
     };
   },
+  unmounted() {
+    window.electron.ipcRenderer.removeAllListeners("select-zip-start");
+    window.electron.ipcRenderer.removeAllListeners("select-zip-done");
+  },
   async mounted() {
     window.electron.ipcRenderer.on("select-zip-start", () => {
       this.loading = true;

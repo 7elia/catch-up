@@ -164,13 +164,15 @@ const tasks = {
       await scrobble(section);
 
       done += section.length;
-      store.set("scrobbledSongs", (store.get("scrobbledSongs") || 0) + section.length);
       mainWindow.webContents.send("update-scrobbled-songs", {
-        scrobbledSongs: store.get("scrobbledSongs")
+        scrobbledSongs: (store.get("scrobbledSongs") || 0) + done
       });
     }
 
-    store.set("remainingSongs", songs.slice(done, songs.length));
+    store.set({
+      scrobbledSongs: (store.get("scrobbledSongs") || 0) + done,
+      remainingSongs: songs.slice(done, songs.length)
+    });
   },
   async analyzer(mainWindow: BrowserWindow) {
     const analysis: AnalysisData = {
@@ -244,7 +246,7 @@ export function registerCallbacks(mainWindow: BrowserWindow) {
   });
 
   for (const task in tasks) {
-    ipcMain.on(`start-${task}`, async () => {
+    ipcMain.handle(`start-${task}`, async () => {
       await tasks[task](mainWindow);
     });
   }

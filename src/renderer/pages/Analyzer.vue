@@ -48,7 +48,6 @@ export default {
       }
       window.electron.ipcRenderer.once("analyzer-done", (_, data: AnalysisData) => {
         this.data = data;
-        console.log(data);
       });
       startTask("analyzer");
       this.canAnalyze = false;

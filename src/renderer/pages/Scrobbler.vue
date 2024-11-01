@@ -7,9 +7,9 @@
         <p>
           <b>Songs Left: </b>
           <code>
-            {{ scannedSongs === 0 ? "None" : scannedSongs }}
+            {{ scannedSongs <= 0 ? "None" : scannedSongs }}
             {{
-              initialScannedSongs === 0 || initialScannedSongs == scannedSongs
+              initialScannedSongs === 0 || initialScannedSongs === scannedSongs
                 ? ""
                 : ` (Initially ${initialScannedSongs})`
             }}
@@ -18,13 +18,15 @@
         <p>
           <b>Estimated Time Left: </b>
           <code>{{
-            scannedSongs === 0 ? "None" : `${Math.ceil(scannedSongs / scrobbleLimit)} Days`
+            scannedSongs === 0
+              ? "None"
+              : `${Math.ceil(scannedSongs / scrobbleLimit)} Day${Math.ceil(scannedSongs / scrobbleLimit) === 1 ? "" : "s"}`
           }}</code>
         </p>
         <div class="progress-bar-container">
           <div class="progress-bar" :style="{ width: `${Math.max(5, progress || 0)}%` }">
             <p class="progress-text" :style="{ color: done ? 'greenyellow' : undefined }">
-              {{ progress }}%
+              {{ Math.min(progress, 100) }}%
             </p>
           </div>
         </div>
@@ -116,25 +118,29 @@ export default {
   unmounted() {
     window.electron.ipcRenderer.removeAllListeners("update-scanned-songs");
     window.electron.ipcRenderer.removeAllListeners("update-scrobbled-songs");
+    window.electron.ipcRenderer.removeAllListeners("zip-select-start");
+    window.electron.ipcRenderer.removeAllListeners("zip-select-done");
   },
   async mounted() {
-    window.electron.ipcRenderer.on("update-scanned-songs", (_, args: { scannedSongs: number }) => {
-      this.scannedSongs = this.initialScannedSongs = args.scannedSongs;
-      this.updateProgress();
-    });
     window.electron.ipcRenderer.on(
       "update-scrobbled-songs",
       (_, args: { scrobbledSongs: number }) => {
-        console.log("hi 3");
         this.scrobbledSongs = args.scrobbledSongs;
+        this.updateProgress();
       }
     );
+    window.electron.ipcRenderer.on("update-scanned-songs", (_, args: { scannedSongs: number }) => {
+      this.scrobbledSongs = this.progress = 0;
+      this.scannedSongs = this.initialScannedSongs = args.scannedSongs;
+      this.updateProgress();
+    });
     window.electron.ipcRenderer.on("zip-select-start", () => {
       this.scannedSongs = this.initialScannedSongs = this.scrobbledSongs = this.progress = 0;
       this.dataLoaded = this.done = false;
       this.updateProgress();
     });
     window.electron.ipcRenderer.on("zip-select-done", async () => {
+      this.dataLoaded = this.done = false;
       await this.init();
     });
 
@@ -145,12 +151,10 @@ export default {
       await this.initStartupData();
       this.updateProgress();
       this.dataLoaded = true;
-      this.done = this.scannedSongs === 0 && !!this.selectedFile;
       await this.startScrobbleCountdown();
     },
     async initStartupData() {
       const startupData = await getStartupData();
-      console.log(startupData);
       this.scannedSongs = startupData.scannedSongs;
       this.initialScannedSongs = startupData.initialScannedSongs;
       this.scrobbledSongs = startupData.scrobbledSongs;
@@ -161,9 +165,7 @@ export default {
       if (!this.canScrobble || this.done) {
         return;
       }
-      console.log("hi");
       startTask("scrobbler");
-      console.log("hi 2");
       this.updateProgress();
       this.canScrobble = false;
       await this.startScrobbleCountdown();
@@ -174,6 +176,7 @@ export default {
         this.initialScannedSongs === 0 || this.scrobbledSongs === 0
           ? 0
           : Math.round((this.scrobbledSongs / this.initialScannedSongs) * 100);
+      this.done = this.progress >= 100;
     },
     async startScrobbleCountdown() {
       const lastScrobbleTime = await getLastScrobbled();
@@ -184,12 +187,17 @@ export default {
         const element = document.getElementById("start-scrobble-text");
         if (!element) {
           return;
+        } else if (this.done) {
+          element.innerText = "Done!";
+          this.canScrobble = false;
+          clearInterval(interval);
+          return;
         }
         const now = new Date();
         const remainingTime = targetTime.getTime() - now.getTime();
 
         if (remainingTime <= 0) {
-          element.innerText = this.done ? "Done!" : "Scrobble Today's Limit";
+          element.innerText = "Scrobble Today's Limit";
           this.canScrobble = true;
           clearInterval(interval);
           return;
