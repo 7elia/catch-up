@@ -12,7 +12,6 @@ import { expand } from "dotenv-expand";
 export const store = new Conf<{
   token: string;
   key: string;
-  scrobbledSongs: number;
   selectedFile: string;
   initialScannedSongs: number;
   remainingSongs: Stream[];

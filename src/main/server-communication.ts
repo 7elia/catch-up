@@ -27,9 +27,13 @@ const callbacks = {
     shell.openPath(args.path);
   },
   getStartupData(): StartupData {
+    let scrobbledSongs = 0;
+    if (store.has("initialScannedSongs") && store.has("remainingSongs")) {
+      scrobbledSongs = store.get("initialScannedSongs") - store.get("remainingSongs").length;
+    }
     return {
+      scrobbledSongs,
       scannedSongs: store.has("remainingSongs") ? store.get("remainingSongs").length : 0,
-      scrobbledSongs: store.get("scrobbledSongs") || 0,
       initialScannedSongs: store.get("initialScannedSongs") || 0,
       scrobbleLimit: store.get("scrobbleLimit") || 2500,
       runOnStartup: platform.isLinux ? false : app.getLoginItemSettings().openAtLogin
@@ -117,7 +121,6 @@ const tasks = {
       store.set({
         selectedFile: result.filePaths[0],
         initialScannedSongs: 0,
-        scrobbledSongs: 0,
         remainingSongs: []
       });
       mainWindow.webContents.send("select-zip-start");
@@ -165,14 +168,11 @@ const tasks = {
 
       done += section.length;
       mainWindow.webContents.send("update-scrobbled-songs", {
-        scrobbledSongs: (store.get("scrobbledSongs") || 0) + done
+        scrobbledSongs: store.get("initialScannedSongs") - songs.length + done
       });
     }
 
-    store.set({
-      scrobbledSongs: (store.get("scrobbledSongs") || 0) + done,
-      remainingSongs: songs.slice(done, songs.length)
-    });
+    store.set("remainingSongs", songs.slice(done, songs.length));
   },
   async analyzer(mainWindow: BrowserWindow) {
     const analysis: AnalysisData = {
